@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <div class="auth-container">
+        <h1>💚 Wishbridge</h1>
+
+        <form id="signup-form">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="email" id="email" placeholder="Email" required>
+
+            <!-- PASSWORD FIELD -->
+            <input type="password" id="password" placeholder="Password" required>
+
+            <div id="password-strength"
+                style="font-size: 12px; margin-top: -8px; margin-bottom: 8px;">
+            </div>
+
+            <ul id="password-requirements"
+                style="font-size: 11px; color: #666; margin-bottom: 16px; padding-left: 20px;">
+                <li id="req-length">✓ 8+ characters</li>
+                <li id="req-upper">✓ Uppercase letter</li>
+                <li id="req-lower">✓ Lowercase letter</li>
+                <li id="req-digit">✓ Digit</li>
+                <li id="req-special">✓ Special character (!@#$%^&*)</li>
+            </ul>
+
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <p>Already have an account? <a href="/login.html">Log in</a></p>
+    </div>
+
+    <script type="module">
+        import { signup } from '/scripts/api.js';
+        import { showToast } from '/scripts/toast.js';
+
+        const form = document.getElementById('signup-form');
+        const passwordInput = document.getElementById('password');
+        const strengthDiv = document.getElementById('password-strength');
+
+        function updatePasswordStrength() {
+            const pwd = passwordInput.value;
+
+            let checks = {
+                length: pwd.length >= 8,
+                upper: /[A-Z]/.test(pwd),
+                lower: /[a-z]/.test(pwd),
+                digit: /[0-9]/.test(pwd),
+                special: /[!@#$%^&*]/.test(pwd)
+            };
+
+            document.getElementById('req-length').style.color = checks.length ? 'green' : '#999';
+            document.getElementById('req-upper').style.color = checks.upper ? 'green' : '#999';
+            document.getElementById('req-lower').style.color = checks.lower ? 'green' : '#999';
+            document.getElementById('req-digit').style.color = checks.digit ? 'green' : '#999';
+            document.getElementById('req-special').style.color = checks.special ? 'green' : '#999';
+
+            let score = Object.values(checks).filter(Boolean).length;
+
+            const labels = ['Very weak', 'Weak', 'Fair', 'Good', 'Strong'];
+            const colors = ['#ff4444', '#ff8844', '#ffcc00', '#88cc44', '#44cc44'];
+
+            strengthDiv.textContent = labels[score - 1] || 'Very weak';
+            strengthDiv.style.color = colors[score - 1] || '#ff4444';
+
+            return checks.length && checks.upper && checks.lower && checks.digit && checks.special;
+        }
+
+        passwordInput.addEventListener('input', updatePasswordStrength);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = passwordInput.value;
+
+            // FINAL VALIDATION BEFORE SEND
+            if (!updatePasswordStrength()) {
+                showToast('Please meet all password requirements.', 'error');
+                return;
+            }
+
+            try {
+                await signup(username, email, password);
+                showToast('Account created! Please log in.', 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1500);
+
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

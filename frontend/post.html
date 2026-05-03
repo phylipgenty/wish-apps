@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Post a Wish - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f9f9ff;
+            padding: 20px;
+        }
+        .post-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sub {
+            color: #666;
+            margin-bottom: 24px;
+            border-left: 3px solid #8a2be2;
+            padding-left: 12px;
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 1rem;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #8a2be2;
+            box-shadow: 0 0 0 3px rgba(138,43,226,0.2);
+        }
+        button[type="submit"] {
+            background: #8a2be2;
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .location-btn {
+            margin-top: 8px;
+            background: #eee;
+            border: none;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .drag-drop {
+            border: 2px dashed #ccc;
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .preview-img {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 16px;
+            border-radius: 16px;
+            display: none;
+        }
+        #vtu-fields {
+            display: none;
+            padding: 16px;
+            border: 1px solid #eee;
+            border-radius: 16px;
+            background: #fafafa;
+            margin-bottom: 16px;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="post-container">
+    <h1>✨ Post a wish</h1>
+    <div class="sub">What would make your day better? 💚</div>
+
+    <form id="post-wish-form">
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="title" required>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="description"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Estimated cost (₦, max ₦15,000)</label>
+            <input type="number" id="estimated_cost" required max="15000" step="100">
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <select id="category_tag">
+                <option>Food</option>
+                <option>Books</option>
+                <option>Art Supplies</option>
+                <option>Small Gadgets</option>
+                <option>Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Wish type</label>
+            <select id="wish_type">
+                <option value="digital">Digital</option>
+                <option value="physical">Physical</option>
+                <option value="story">Story</option>
+                <option value="airtime">Airtime</option>
+                <option value="data">Data</option>
+            </select>
+        </div>
+
+        <!-- VTU SECTION (airtime/data) -->
+        <div id="vtu-fields">
+            <div class="form-group">
+                <label>📱 Phone Number</label>
+                <input type="tel" id="phone_number" placeholder="08012345678">
+            </div>
+            <div class="form-group">
+                <label>📶 Network</label>
+                <select id="network">
+                    <option value="">Select network</option>
+                    <option value="MTN">MTN</option>
+                    <option value="GLO">GLO</option>
+                    <option value="AIRTEL">Airtel</option>
+                    <option value="9MOBILE">9mobile</option>
+                </select>
+            </div>
+            <div class="form-group" id="data-plan-group" style="display:none;">
+                <label>📦 Data Plan</label>
+                <select id="data_plan_id">
+                    <option value="">Select plan</option>
+                    <!-- GLO plans -->
+                    <option value="35" data-price="215">Glo 500MB – ₦215 (30 days)</option>
+                    <option value="36" data-price="430">Glo 1GB – ₦430 (30 days)</option>
+                    <option value="37" data-price="860">Glo 2GB – ₦860 (30 days)</option>
+                    <option value="38" data-price="1290">Glo 3GB – ₦1290 (30 days)</option>
+                    <option value="39" data-price="2150">Glo 5GB – ₦2150 (30 days)</option>
+                    <!-- MTN plans -->
+                    <option value="252" data-price="493">MTN 600MB – ₦493 (7 days)</option>
+                    <option value="253" data-price="985">MTN 1.5GB – ₦985 (7 days)</option>
+                    <option value="254" data-price="1478">MTN 3.5GB – ₦1478 (7 days)</option>
+                    <option value="255" data-price="4925">MTN 20GB – ₦4925 (7 days)</option>
+                    <!-- Airtel plans -->
+                    <option value="300" data-price="1479">Airtel 2GB – ₦1479 (30 days)</option>
+                    <option value="301" data-price="1972">Airtel 3GB – ₦1972 (30 days)</option>
+                    <option value="302" data-price="2465">Airtel 4GB – ₦2465 (30 days)</option>
+                    <!-- 9mobile plans -->
+                    <option value="68" data-price="260">9mobile 500MB – ₦260 (30 days)</option>
+                    <option value="69" data-price="500">9mobile 1GB – ₦500 (30 days)</option>
+                    <option value="71" data-price="1000">9mobile 2GB – ₦1000 (30 days)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>📍 Location (optional)</label>
+            <input type="text" id="location_name" placeholder="City, Country">
+            <button type="button" id="get-location-btn" class="location-btn">Use my current location</button>
+            <input type="hidden" id="latitude">
+            <input type="hidden" id="longitude">
+        </div>
+
+        <div class="form-group">
+            <label>📸 Proof image</label>
+            <div id="dropzone" class="drag-drop">
+                📤 Drag & drop or click
+                <input type="file" id="fileInput" hidden>
+                <img id="preview" class="preview-img">
+            </div>
+            <input type="hidden" id="proof_url">
+        </div>
+
+        <div class="form-group">
+            <label><input type="checkbox" id="is_anonymous"> Post anonymously</label>
+        </div>
+
+        <button type="submit">💚 Post Wish</button>
+    </form>
+</div>
+
+<script type="module">
+import { createWish, getAuthToken } from '/scripts/api.js';
+import { showToast } from '/scripts/toast.js';
+
+if (!getAuthToken()) window.location.href = '/login.html';
+
+// DOM elements
+const wishTypeSelect = document.getElementById('wish_type');
+const vtuFieldsDiv = document.getElementById('vtu-fields');
+const dataPlanGroup = document.getElementById('data-plan-group');
+const phoneInput = document.getElementById('phone_number');
+const networkSelect = document.getElementById('network');
+const dataPlanSelect = document.getElementById('data_plan_id');
+const estimatedCostInput = document.getElementById('estimated_cost');
+
+function toggleVtuFields() {
+    const type = wishTypeSelect.value;
+    if (type === 'airtime' || type === 'data') {
+        vtuFieldsDiv.style.display = 'block';
+        // For data, auto-set cost based on plan; for airtime, user enters amount
+        if (type === 'data') {
+            dataPlanGroup.style.display = 'block';
+            estimatedCostInput.readOnly = true;
+            estimatedCostInput.classList.add('readonly-bg');
+            updateCostFromDataPlan();
+        } else {
+            dataPlanGroup.style.display = 'none';
+            estimatedCostInput.readOnly = false;
+            estimatedCostInput.classList.remove('readonly-bg');
+        }
+    } else {
+        vtuFieldsDiv.style.display = 'none';
+        estimatedCostInput.readOnly = false;
+        estimatedCostInput.classList.remove('readonly-bg');
+    }
+}
+
+function updateCostFromDataPlan() {
+    const selectedOption = dataPlanSelect.options[dataPlanSelect.selectedIndex];
+    if (selectedOption && selectedOption.dataset.price) {
+        estimatedCostInput.value = selectedOption.dataset.price;
+    } else {
+        estimatedCostInput.value = '';
+    }
+}
+
+wishTypeSelect.addEventListener('change', toggleVtuFields);
+dataPlanSelect.addEventListener('change', updateCostFromDataPlan);
+toggleVtuFields();
+
+// Location capture
+document.getElementById('get-location-btn').addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        showToast('Geolocation not supported', 'error');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            document.getElementById('latitude').value = pos.coords.latitude;
+            document.getElementById('longitude').value = pos.coords.longitude;
+            showToast('📍 Location captured!', 'success');
+        },
+        () => showToast('Location denied', 'error')
+    );
+});
+
+// Image upload
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const proofUrlInput = document.getElementById('proof_url');
+document.getElementById('dropzone').onclick = () => fileInput.click();
+fileInput.onchange = async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const res = await fetch('http://127.0.0.1:8000/wishes/upload-proof', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+            body: formData
+        });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        proofUrlInput.value = data.proof_url;
+        preview.src = `http://127.0.0.1:8000${data.proof_url}`;
+        preview.style.display = 'block';
+        showToast('Image uploaded ✔', 'success');
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+};
+
+// Form submission
+const form = document.getElementById('post-wish-form');
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const MAX_COST_NGN = 15000;
+    const costNgn = parseFloat(estimatedCostInput.value);
+    if (isNaN(costNgn) || costNgn > MAX_COST_NGN) {
+        showToast(`Cost cannot exceed ₦${MAX_COST_NGN}`, 'error');
+        return;
+    }
+
+    // Convert NGN to USD for storage (using same rate as VTU)
+    const USD_TO_NGN = 1500;
+    const costUsd = costNgn / USD_TO_NGN;
+
+    let wishData = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        estimated_cost: costUsd,
+        category_tag: document.getElementById('category_tag').value,
+        wish_type: wishTypeSelect.value,
+        is_anonymous: document.getElementById('is_anonymous').checked,
+        proof_url: proofUrlInput.value || null,
+        geo_location: document.getElementById('location_name').value || null,
+        latitude: document.getElementById('latitude').value ? parseFloat(document.getElementById('latitude').value) : null,
+        longitude: document.getElementById('longitude').value ? parseFloat(document.getElementById('longitude').value) : null,
+        occasion: null,
+        karma_required: 0
+    };
+
+    const type = wishTypeSelect.value;
+    if (type === 'airtime' || type === 'data') {
+        if (!phoneInput.value || !networkSelect.value) {
+            showToast('Phone number and network are required', 'error');
+            return;
+        }
+        wishData.phone_number = phoneInput.value;
+        wishData.network = networkSelect.value;
+    }
+    if (type === 'data') {
+        if (!dataPlanSelect.value) {
+            showToast('Please select a data plan', 'error');
+            return;
+        }
+        wishData.data_plan_id = dataPlanSelect.value;  // numeric Service ID
+    }
+
+    try {
+        await createWish(wishData);
+        showToast('Wish posted 💚', 'success');
+        setTimeout(() => location.href = '/index.html', 1500);
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Wishbridge – Swipe Kindness</title>
+
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/components.css">
+
+    <style>
+        .navbar-right {
+            position: relative;
+            display: inline-block;
+            margin-left: auto;
+        }
+        .bell-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+            padding: 0 12px;
+        }
+        .notif-badge {
+            background: red;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            display: none;
+        }
+        .notif-dropdown {
+            position: absolute;
+            right: 0;
+            top: 35px;
+            width: 280px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notif-dropdown-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .notif-dropdown-item.unread {
+            background: #f0f0ff;
+            font-weight: bold;
+        }
+        .notif-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+        .notif-time {
+            display: block;
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
+        }
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .top-nav a {
+            color: #8a2be2;
+            text-decoration: none;
+            margin: 0 8px;
+            font-weight: 500;
+        }
+        .top-nav a:hover {
+            text-decoration: underline;
+        }
+        .notification-container {
+            position: absolute;
+            right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <!-- NAV -->
+    <div class="top-nav">
+        <a href="/post.html">✨ Post a Wish</a> |
+        <a href="/profile.html">👤 Profile</a> |
+        <a href="/dashboard.html">📋 Queue</a> |
+        <a href="/stories.html">📖 Stories</a> |
+        <a href="/map.html">🗺️ Map</a> |
+        <a href="/settings.html">⚙️ Settings</a>
+
+        <div class="notification-container">
+            <button id="notification-bell" class="bell-btn">
+                🔔
+                <span id="notif-count" class="notif-badge">0</span>
+            </button>
+            <div id="notif-dropdown" class="notif-dropdown"></div>
+        </div>
+    </div>
+
+    <!-- SWIPE AREA -->
+    <div id="swipe-container">
+        <div class="card-stack">
+            <div class="card-placeholder">Loading wishes...</div>
+        </div>
+        <div class="swipe-instructions">
+            <span>👈 Skip</span>
+            <span>👉 Grant</span>
+            <span>👆 Flag</span>
+        </div>
+    </div>
+</div>
+
+<!-- MODULE IMPORTS (order matters) -->
+<script type="module" src="/scripts/api.js"></script>
+<script type="module" src="/scripts/toast.js"></script>
+<script type="module" src="/scripts/modal.js"></script>
+<script type="module" src="/scripts/notifications.js"></script>
+<script type="module" src="/scripts/swipe.js"></script>
+<script type="module" src="/scripts/app.js"></script>
+
+<!-- NOTIFICATION INIT - must run after all modules are loaded -->
+<script type="module">
+    import { getAuthToken } from '/scripts/api.js';
+    import { initNotificationBell } from '/scripts/notifications.js';
+
+    if (getAuthToken()) {
+        const bell = document.getElementById('notification-bell');
+        const countSpan = document.getElementById('notif-count');
+        const dropdown = document.getElementById('notif-dropdown');
+        if (bell && countSpan && dropdown) {
+            initNotificationBell(bell, countSpan, dropdown);
+        }
+    }
+</script>
+</body>
+</html>

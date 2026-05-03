@@ -1,0 +1,1 @@
+from .thanks import router as thanks_router

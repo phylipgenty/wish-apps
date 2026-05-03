@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Settings - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        .settings-container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 24px;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        }
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-family: inherit;
+        }
+        textarea { resize: vertical; }
+        button { background: #8a2be2; color: white; border: none; padding: 12px; width: 100%; border-radius: 40px; cursor: pointer; }
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { margin: 0 12px; color: #8a2be2; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div class="nav">
+    <a href="/index.html">Swipe</a>
+    <a href="/profile.html">Profile</a>
+</div>
+<div class="settings-container">
+    <h2>⚙️ Edit Profile</h2>
+    <form id="settings-form">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Username">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="Email">
+        </div>
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="password" placeholder="Leave blank to keep current">
+        </div>
+        <div class="form-group">
+            <label>Bio</label>
+            <textarea id="bio" rows="3" placeholder="Tell something about yourself..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="location" placeholder="City, Country">
+        </div>
+        <div class="form-group">
+            <label>Gender</label>
+            <select id="gender">
+                <option value="">Prefer not to say</option>
+                <option>Female</option>
+                <option>Male</option>
+                <option>Non-binary</option>
+                <option>Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="date" id="dob">
+        </div>
+        <div class="form-group">
+            <label>Avatar</label>
+            <img id="avatar-preview" class="avatar-preview" style="display: none;">
+            <input type="file" id="avatar-input" accept="image/*">
+            <button type="button" id="upload-avatar-btn">Upload New Avatar</button>
+        </div>
+        <button type="submit">Save Changes</button>
+    </form>
+</div>
+<script type="module">
+    import { getAuthToken, getMe } from '/scripts/api.js';
+    import { showToast } from '/scripts/toast.js';
+
+    if (!getAuthToken()) window.location.href = '/login.html';
+
+    let currentUser = null;
+
+    async function loadCurrentUser() {
+        try {
+            currentUser = await getMe();
+            document.getElementById('username').value = currentUser.username;
+            document.getElementById('email').value = currentUser.email;
+            document.getElementById('bio').value = currentUser.bio || '';
+            document.getElementById('location').value = currentUser.location || '';
+            document.getElementById('gender').value = currentUser.gender || '';
+            if (currentUser.date_of_birth) {
+                document.getElementById('dob').value = currentUser.date_of_birth.split('T')[0];
+            }
+            if (currentUser.avatar_url) {
+                const avatarImg = document.getElementById('avatar-preview');
+                avatarImg.src = `http://127.0.0.1:8000${currentUser.avatar_url}`;
+                avatarImg.style.display = 'block';
+            }
+        } catch (err) {
+            showToast('Failed to load profile', 'error');
+        }
+    }
+
+    document.getElementById('upload-avatar-btn').addEventListener('click', async () => {
+        const fileInput = document.getElementById('avatar-input');
+        const file = fileInput.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch('http://127.0.0.1:8000/users/upload-avatar', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+                body: formData
+            });
+            const data = await res.json();
+            showToast('Avatar updated', 'success');
+            const avatarImg = document.getElementById('avatar-preview');
+            avatarImg.src = `http://127.0.0.1:8000${data.avatar_url}`;
+            avatarImg.style.display = 'block';
+        } catch (err) {
+            showToast('Upload failed', 'error');
+        }
+    });
+
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const updateData = {};
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const bio = document.getElementById('bio').value;
+        const location = document.getElementById('location').value;
+        const gender = document.getElementById('gender').value;
+        const dob = document.getElementById('dob').value;
+
+        if (username !== currentUser.username) updateData.username = username;
+        if (email !== currentUser.email) updateData.email = email;
+        if (password) updateData.password = password;
+        if (bio !== (currentUser.bio || '')) updateData.bio = bio;
+        if (location !== (currentUser.location || '')) updateData.location = location;
+        if (gender !== (currentUser.gender || '')) updateData.gender = gender;
+        if (dob !== (currentUser.date_of_birth ? currentUser.date_of_birth.split('T')[0] : '')) updateData.date_of_birth = dob;
+
+        if (Object.keys(updateData).length === 0) {
+            showToast('No changes to save', 'info');
+            return;
+        }
+        try {
+            const res = await fetch('http://127.0.0.1:8000/users/me', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
+                body: JSON.stringify(updateData)
+            });
+            if (!res.ok) throw new Error(await res.text());
+            showToast('Profile updated!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
+
+    loadCurrentUser();
+</script>
+</body>
+</html>

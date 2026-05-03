@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/components.css">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 12px;
+            border: 3px solid #8a2be2;
+        }
+        .karma-badge {
+            background: #8a2be2;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8a2be2;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .verified-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .email-verify-section {
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .resend-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+        .topup-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #8a2be2;
+            font-weight: bold;
+        }
+        .logout-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        /* Notification styles */
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        .notification-container {
+            position: absolute;
+            right: 20px;
+        }
+        .bell-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+        .notif-badge {
+            background: red;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            display: none;
+        }
+        .notif-dropdown {
+            position: absolute;
+            right: 0;
+            top: 35px;
+            width: 280px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notif-dropdown-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .notif-dropdown-item.unread {
+            background: #f0f0ff;
+            font-weight: bold;
+        }
+        .notif-time {
+            display: block;
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    animation: popIn 0.25s ease;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Presets */
+.preset-amounts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.preset-amounts button {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: #f3ecff;
+    color: #8a2be2;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.preset-amounts button.active {
+    background: #8a2be2;
+    color: white;
+}
+
+/* Input */
+#custom-amount {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Buttons */
+.confirm-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #8a2be2, #6a0dad);
+    color: white;
+    padding: 12px;
+    border-radius: 40px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+}
+
+/* Animation */
+@keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div>
+        <a href="/index.html">Swipe</a>
+        <a href="/post.html">Post Wish</a>
+        <a href="/dashboard.html">Queue</a>
+        <a href="/stories.html">Stories</a>
+        <a href="/map.html">Map</a>
+        <a href="/settings.html">Settings</a>
+    </div>
+    <div class="notification-container">
+        <button id="notification-bell" class="bell-btn">
+            🔔
+            <span id="notif-count" class="notif-badge">0</span>
+        </button>
+        <div id="notif-dropdown" class="notif-dropdown"></div>
+    </div>
+</div>
+
+<div class="profile-container">
+    <div class="profile-header">
+        <img id="avatar-img" class="avatar" style="display: none;" alt="avatar">
+        <h1>💚 My Profile</h1>
+        <div id="username-display" style="font-size: 24px; margin: 10px 0;"></div>
+        <div>
+            <span class="karma-badge" id="karma-score">Karma: 0</span>
+            <span id="verified-badge" class="verified-badge" style="display:none;">✓ Verified</span>
+        </div>
+    </div>
+
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="wallet-balance">0</div>
+            <div class="stat-label">Wallet ($)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="total-grants">0</div>
+            <div class="stat-label">Wishes Granted</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="streak">0</div>
+            <div class="stat-label">Day Streak</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="successful-receipts">0</div>
+            <div class="stat-label">Success Stories</div>
+        </div>
+    </div>
+
+    <button id="topup-btn" class="topup-btn">💰 Top Up Wallet</button>
+
+    <div id="email-verify-section" style="display: none;" class="email-verify-section">
+        <span>📩 <strong>Email not verified</strong> – please check your inbox.</span>
+        <button id="resend-verify-btn" class="resend-btn">Resend verification</button>
+    </div>
+
+    <div class="nav-links">
+        <a href="/index.html">Swipe</a>
+        <a href="/post.html">Post Wish</a>
+        <a href="/dashboard.html">Queue</a>
+        <a href="/stories.html">Stories</a>
+        <a href="/map.html">Map</a>
+        <a href="/settings.html">Settings</a>
+    </div>
+
+    <button class="logout-btn" id="logout-btn">Logout</button>
+</div>
+
+<script type="module" src="/scripts/api.js"></script>
+<script type="module" src="/scripts/toast.js"></script>
+<script type="module" src="/scripts/notifications.js"></script>
+
+<script type="module">
+import { getMe, clearAuthToken, getAuthToken } from '/scripts/api.js';
+import { showToast } from '/scripts/toast.js';
+import { initNotificationBell } from '/scripts/notifications.js';
+
+const token = getAuthToken();
+if (!token) window.location.href = '/login.html';
+
+// =========================
+// 🔔 Notifications
+// =========================
+const bell = document.getElementById('notification-bell');
+const countSpan = document.getElementById('notif-count');
+const dropdown = document.getElementById('notif-dropdown');
+if (bell && countSpan && dropdown) initNotificationBell(bell, countSpan, dropdown);
+
+// =========================
+// 💰 Wallet Balance
+// =========================
+async function fetchWalletBalance() {
+    try {
+        const res = await fetch('http://127.0.0.1:8000/wallet/balance', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        // Format as ₦ with commas
+        document.getElementById('wallet-balance').innerText =
+            new Intl.NumberFormat('en-NG').format(data.balance);
+
+    } catch (err) {
+        console.error('Failed to fetch wallet balance');
+    }
+}
+
+// =========================
+// 👤 Load Profile
+// =========================
+async function loadProfile() {
+    try {
+        const user = await getMe();
+
+        document.getElementById('username-display').textContent = user.username;
+        document.getElementById('karma-score').textContent = `Karma: ${user.karma_score}`;
+        document.getElementById('total-grants').textContent = user.total_grants;
+        document.getElementById('streak').textContent = user.streak_count;
+        document.getElementById('successful-receipts').textContent = user.successful_receipts;
+
+        if (user.is_verified) {
+            document.getElementById('verified-badge').style.display = 'inline-block';
+        }
+
+        if (user.avatar_url) {
+            const img = document.getElementById('avatar-img');
+            img.src = `http://127.0.0.1:8000${user.avatar_url}`;
+            img.style.display = 'block';
+        }
+
+        const emailSection = document.getElementById('email-verify-section');
+        if (!user.is_email_verified) {
+            emailSection.style.display = 'flex';
+            showToast('📩 Please verify your email.', 'warning');
+        } else {
+            emailSection.style.display = 'none';
+        }
+
+        await fetchWalletBalance();
+
+    } catch (err) {
+        showToast('Please log in again.', 'error');
+        setTimeout(() => window.location.href = '/login.html', 1200);
+    }
+}
+
+// =========================
+// 📩 Resend Verification
+// =========================
+document.getElementById('resend-verify-btn')?.addEventListener('click', async () => {
+    try {
+        const res = await fetch('http://127.0.0.1:8000/users/resend-verification', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+
+        showToast('Verification email sent!', 'success');
+
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+});
+
+// =========================
+// 💳 TOP-UP MODAL LOGIC
+// =========================
+const modal = document.getElementById('topup-modal');
+const topupBtn = document.getElementById('topup-btn');
+const closeModal = document.getElementById('close-modal');
+const confirmBtn = document.getElementById('confirm-topup');
+const customInput = document.getElementById('custom-amount');
+const presetButtons = document.querySelectorAll('.preset-amounts button');
+
+let selectedAmount = null;
+
+// Open modal
+topupBtn.addEventListener('click', () => {
+    modal.style.display = 'flex';
+});
+
+// Close modal
+closeModal.addEventListener('click', () => {
+    modal.style.display = 'none';
+});
+
+// Click outside to close
+window.addEventListener('click', (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+});
+
+// Preset selection
+presetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        presetButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        selectedAmount = parseInt(btn.dataset.amount);
+        customInput.value = '';
+    });
+});
+
+// Custom input
+customInput.addEventListener('input', () => {
+    presetButtons.forEach(b => b.classList.remove('active'));
+    selectedAmount = parseInt(customInput.value);
+});
+
+// Confirm payment
+confirmBtn.addEventListener('click', async () => {
+    if (!selectedAmount || selectedAmount < 100) {
+        showToast('Minimum is ₦100', 'warning');
+        return;
+    }
+
+    try {
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = "Processing...";
+
+        const res = await fetch('http://127.0.0.1:8000/payments/initialize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ amount: selectedAmount })
+        });
+
+        const data = await res.json();
+
+        if (data.authorization_url) {
+            showToast('Redirecting to secure payment...', 'info');
+            window.location.href = data.authorization_url;
+        } else {
+            showToast('Payment initialization failed', 'error');
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = "Continue";
+        }
+
+    } catch (err) {
+        showToast(err.message, 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = "Continue";
+    }
+});
+
+// =========================
+// 🚪 Logout
+// =========================
+document.getElementById('logout-btn').addEventListener('click', () => {
+    clearAuthToken();
+    showToast('Logged out', 'info');
+    setTimeout(() => window.location.href = '/login.html', 1000);
+});
+
+// =========================
+// 🚀 INIT
+// =========================
+loadProfile();
+</script>
+
+<div id="topup-modal" class="modal">
+    <div class="modal-content">
+        <h2>💰 Fund Wallet</h2>
+        <p class="subtitle">Choose amount (₦)</p>
+
+        <div class="preset-amounts">
+            <button data-amount="1000">₦1,000</button>
+            <button data-amount="2000">₦2,000</button>
+            <button data-amount="5000">₦5,000</button>
+            <button data-amount="10000">₦10,000</button>
+        </div>
+
+        <input 
+            type="number" 
+            id="custom-amount" 
+            placeholder="Enter custom amount (₦)" 
+            min="100"
+        >
+
+        <button id="confirm-topup" class="confirm-btn">Continue</button>
+        <button id="close-modal" class="close-btn">Cancel</button>
+    </div>
+</div>
+</body>
+</html>

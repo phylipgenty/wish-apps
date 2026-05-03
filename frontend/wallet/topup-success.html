@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Top-up Successful - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #f9f9ff;
+        }
+        .card {
+            background: white;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 32px;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        }
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 16px;
+        }
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #8a2be2;
+            color: white;
+            text-decoration: none;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+        .redirect-note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .loader {
+            display: inline-block;
+            margin-top: 20px;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #8a2be2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="success-icon">✅</div>
+    <div class="message">Payment Successful!</div>
+    <p>Verifying your payment...</p>
+    <div class="loader"></div>
+    <div class="redirect-note">You will be redirected automatically in a moment...</div>
+</div>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const reference = urlParams.get('reference');
+    if (reference) {
+        const token = localStorage.getItem('wishbridge_token');
+        fetch(`http://127.0.0.1:8000/payments/verify?reference=${reference}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Wallet credited with ₦' + data.amount);
+            } else {
+                console.warn('Verification failed');
+            }
+        })
+        .catch(err => console.error(err))
+        .finally(() => {
+            setTimeout(() => {
+                window.location.href = '/profile.html';
+            }, 2000);
+        });
+    } else {
+        setTimeout(() => {
+            window.location.href = '/profile.html';
+        }, 2000);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Kindness Map - Wishbridge</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        #map {
+            height: 70vh;
+            width: 100%;
+            border-radius: 24px;
+            margin-top: 20px;
+        }
+        .map-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .nav-links a {
+            margin: 0 12px;
+            color: #8a2be2;
+            text-decoration: none;
+        }
+        h1 {
+            text-align: center;
+        }
+        .sub {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="nav-links">
+    <a href="/index.html">Swipe</a>
+    <a href="/post.html">Post Wish</a>
+    <a href="/profile.html">Profile</a>
+    <a href="/dashboard.html">Queue</a>
+    <a href="/stories.html">Stories</a>
+    <a href="/map.html">🗺️ Map</a>
+</div>
+<div class="map-container">
+    <h1>🗺️ Global Kindness Map</h1>
+    <div class="sub">Every pin is a granted wish – real kindness, real places</div>
+    <div id="map"></div>
+</div>
+
+<script type="module">
+    import { showToast } from '/scripts/toast.js';
+
+    async function loadMapPoints() {
+        try {
+            const res = await fetch('http://127.0.0.1:8000/wishes/map/kindness');
+            if (!res.ok) throw new Error('Failed to load map data');
+            const points = await res.json();
+            
+            // Initialize map (centered on world)
+            const map = L.map('map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB'
+            }).addTo(map);
+            
+            if (points.length === 0) {
+                showToast('No kindness pins yet. Grant a wish with location to appear here!', 'info');
+                return;
+            }
+            
+            // Create custom icon
+            const kindnessIcon = L.divIcon({
+                className: 'kindness-marker',
+                html: '💚',
+                iconSize: [30, 30],
+                popupAnchor: [0, -15]
+            });
+            
+            points.forEach(point => {
+                const marker = L.marker([point.latitude, point.longitude], { icon: kindnessIcon }).addTo(map);
+                marker.bindPopup(`
+                    <strong>${escapeHtml(point.title)}</strong><br>
+                    ${escapeHtml(point.description.substring(0, 80))}...<br>
+                    <img src="http://127.0.0.1:8000${point.proof_url}" style="max-width: 150px; border-radius: 8px; margin-top: 8px;">
+                `);
+            });
+            
+        } catch (err) {
+            showToast('Failed to load map', 'error');
+        }
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, (m) => {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    loadMapPoints();
+</script>
+</body>
+</html>

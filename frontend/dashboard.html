@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Grant Queue - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        .queue-container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .queue-item {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .wish-info {
+            flex: 1;
+            cursor: pointer;
+        }
+        .wish-title {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .wish-cost {
+            font-size: 0.85rem;
+            color: #8a2be2;
+            font-weight: 500;
+        }
+        .grant-circle {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #8a2be2;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #8a2be2;
+            transition: 0.1s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .grant-circle.active {
+            background: #f0e6ff;
+        }
+        .progress-ring-svg {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            fill: none;
+            stroke: #d40280;
+            stroke-width: 4;
+            stroke-dasharray: 0 1000;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.05s linear;
+        }
+        .hold-hint {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 6px;
+            color: #888;
+        }
+        .remove-btn {
+            background: #ef4444;
+            border: none;
+            color: white;
+            border-radius: 40px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .empty-queue {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .nav {
+            text-align: center;
+            margin: 20px;
+            position: relative;
+        }
+        .nav a {
+            color: #8a2be2;
+            margin: 0 12px;
+            text-decoration: none;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+        }
+        .sub {
+            text-align: center;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        /* Notification styles */
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        .notification-container {
+            position: absolute;
+            right: 20px;
+        }
+        .bell-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+        .notif-badge {
+            background: red;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            display: none;
+        }
+        .notif-dropdown {
+            position: absolute;
+            right: 0;
+            top: 35px;
+            width: 280px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notif-dropdown-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .notif-dropdown-item.unread {
+            background: #f0f0ff;
+            font-weight: bold;
+        }
+        .notif-dropdown-item:hover {
+            background: #f5f5f5;
+        }
+        .notif-time {
+            display: block;
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #888;
+        }
+        .modal-close:hover { color: #000; }
+        .modal-image {
+            width: 100%;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            max-height: 300px;
+            object-fit: cover;
+        }
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .modal-cost {
+            font-size: 1.2rem;
+            color: #8a2be2;
+            margin-bottom: 12px;
+        }
+        .modal-desc {
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .modal-meta {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        /* Grant method modal buttons */
+        .preset-amounts {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .confirm-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            text-align: center;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .modal-content h2 {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-nav">
+    <div>
+        <a href="/index.html">← Swipe</a>
+        <a href="/profile.html">Profile</a>
+        <a href="/stories.html">Stories</a>
+        <a href="/map.html">🗺️ Map</a>
+        <a href="/settings.html">⚙️ Settings</a>
+    </div>
+    <div class="notification-container">
+        <button id="notification-bell" class="bell-btn">🔔<span id="notif-count" class="notif-badge">0</span></button>
+        <div id="notif-dropdown" class="notif-dropdown"></div>
+    </div>
+</div>
+
+<div class="queue-container">
+    <h1>💜 Grant Queue</h1>
+    <div class="sub">Press and hold the circle button (3s) to grant</div>
+    <div id="queue-list"></div>
+</div>
+
+<!-- Wish detail modal -->
+<div id="wish-modal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" id="modal-close">&times;</span>
+        <img id="modal-image" class="modal-image" style="display: none;">
+        <div id="modal-title" class="modal-title"></div>
+        <div id="modal-cost" class="modal-cost"></div>
+        <div id="modal-desc" class="modal-desc"></div>
+        <div id="modal-occasion" class="modal-meta"></div>
+        <div id="modal-status" class="modal-meta"></div>
+    </div>
+</div>
+
+<!-- Grant method modal (always shown, but buttons change) -->
+<div id="grant-method-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="grant-modal-title">💚 Grant this wish</h2>
+        <p id="grant-cost-display"></p>
+        <div class="preset-amounts">
+            <button id="grant-wallet-btn" class="confirm-btn" style="background:#8a2be2;">💳 Pay with Wallet</button>
+            <button id="grant-paystack-btn" class="confirm-btn" style="background:#f39c12;">💳 Pay with Card/Bank</button>
+            <button id="grant-manual-btn" class="confirm-btn" style="background:#10b981;">✨ Grant Wish (Manual)</button>
+        </div>
+        <button id="close-grant-modal" class="close-btn">Cancel</button>
+    </div>
+</div>
+
+<script type="module" src="/scripts/api.js"></script>
+<script type="module" src="/scripts/toast.js"></script>
+<script type="module" src="/scripts/notifications.js"></script>
+
+<script type="module">
+    import { showToast } from '/scripts/toast.js';
+    import { getAuthToken } from '/scripts/api.js';
+    import { initNotificationBell } from '/scripts/notifications.js';
+
+    const token = getAuthToken();
+    if (!token) window.location.href = '/login.html';
+
+    // Notification bell
+    const bell = document.getElementById('notification-bell');
+    const countSpan = document.getElementById('notif-count');
+    const dropdown = document.getElementById('notif-dropdown');
+    if (bell && countSpan && dropdown) initNotificationBell(bell, countSpan, dropdown);
+
+    let queue = JSON.parse(localStorage.getItem('grantQueue') || '[]');
+    let pendingGrantWishId = null;
+
+    // ---- Wish detail modal ----
+    const wishModal = document.getElementById('wish-modal');
+    const modalClose = document.getElementById('modal-close');
+    modalClose.onclick = () => wishModal.style.display = 'none';
+    window.onclick = (e) => { if (e.target === wishModal) wishModal.style.display = 'none'; };
+
+    async function showWishModal(wishId) {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/wishes/${wishId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const wish = await res.json();
+            const ngnCost = (wish.estimated_cost * 1500).toLocaleString();
+            document.getElementById('modal-title').innerText = wish.title;
+            document.getElementById('modal-cost').innerHTML = `💰 ₦${ngnCost}`;
+            document.getElementById('modal-desc').innerText = wish.description;
+            document.getElementById('modal-occasion').innerHTML = wish.occasion ? `🎉 Occasion: ${wish.occasion}` : '';
+            document.getElementById('modal-status').innerHTML = `📌 Status: ${wish.status}`;
+            const modalImg = document.getElementById('modal-image');
+            if (wish.proof_url) {
+                modalImg.src = `http://127.0.0.1:8000${wish.proof_url}`;
+                modalImg.style.display = 'block';
+            } else {
+                modalImg.style.display = 'none';
+            }
+            wishModal.style.display = 'flex';
+        } catch (err) {
+            showToast('Could not load wish details', 'error');
+        }
+    }
+
+    // ---- Load queue list ----
+    async function loadWishDetails() {
+        const container = document.getElementById('queue-list');
+        if (queue.length === 0) {
+            container.innerHTML = '<div class="empty-queue">✨ No wishes in queue. Swipe right on wishes you want to grant.</div>';
+            return;
+        }
+        container.innerHTML = '';
+        let dirty = false;
+        for (let wishId of queue) {
+            const res = await fetch(`http://127.0.0.1:8000/wishes/${wishId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                dirty = true;
+                queue = queue.filter(id => id !== wishId);
+                continue;
+            }
+            const wish = await res.json();
+            if (wish.status !== 'active') {
+                dirty = true;
+                queue = queue.filter(id => id !== wishId);
+                showToast(`"${escapeHtml(wish.title)}" is no longer available. Removed from queue.`, 'info');
+                continue;
+            }
+            const ngnCost = (wish.estimated_cost * 1500).toLocaleString();
+            const posterHtml = wish.is_anonymous
+                ? 'Anonymous'
+                : `<a href="/public-profile.html?user_id=${wish.user_id}" style="color:#8a2be2; text-decoration:none;">${escapeHtml(wish.username)}</a>`;
+            const div = document.createElement('div');
+            div.className = 'queue-item';
+            div.innerHTML = `
+                <div class="wish-info" data-id="${wishId}">
+                    <div class="wish-title">${escapeHtml(wish.title)}</div>
+                    <div class="wish-cost">💰 ₦${ngnCost}</div>
+                    <div class="wish-poster" style="font-size:0.8rem; margin-top:4px;">👤 Posted by: ${posterHtml}</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="remove-btn" data-id="${wishId}">✖ Remove</button>
+                    <div>
+                        <div class="grant-circle" data-id="${wishId}">
+                            <span class="grant-text">Grant</span>
+                            <svg class="progress-ring-svg" viewBox="0 0 72 72">
+                                <circle class="progress-ring-circle" cx="36" cy="36" r="32" stroke-dasharray="0 201" />
+                            </svg>
+                        </div>
+                        <div class="hold-hint">hold 3s</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+        if (dirty) {
+            localStorage.setItem('grantQueue', JSON.stringify(queue));
+            loadWishDetails();
+            return;
+        }
+        attachHoldListeners();
+        attachRemoveListeners();
+        attachInfoListeners();
+    }
+
+    function attachHoldListeners() {
+        document.querySelectorAll('.grant-circle').forEach(btn => {
+            let interval = null;
+            let startTime = 0;
+            const circle = btn.querySelector('.progress-ring-circle');
+            const circumference = 2 * Math.PI * 32;
+            function updateProgress(elapsed) {
+                const percent = Math.min(1, elapsed / 3000);
+                circle.style.strokeDasharray = `${percent * circumference} ${circumference}`;
+            }
+            function startHold(e) {
+                e.preventDefault();
+                startTime = Date.now();
+                btn.classList.add('active');
+                circle.style.strokeDasharray = `0 ${circumference}`;
+                interval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    updateProgress(elapsed);
+                    if (elapsed >= 3000) {
+                        clearInterval(interval);
+                        interval = null;
+                        const wishId = parseInt(btn.dataset.id);
+                        confirmGrant(wishId);
+                        reset();
+                    }
+                }, 30);
+            }
+            function cancelHold() {
+                if (interval) clearInterval(interval);
+                reset();
+            }
+            function reset() {
+                btn.classList.remove('active');
+                circle.style.strokeDasharray = `0 ${circumference}`;
+            }
+            btn.addEventListener('mousedown', startHold);
+            btn.addEventListener('mouseup', cancelHold);
+            btn.addEventListener('mouseleave', cancelHold);
+            btn.addEventListener('touchstart', startHold);
+            btn.addEventListener('touchend', cancelHold);
+            btn.addEventListener('touchcancel', cancelHold);
+        });
+    }
+
+    function attachRemoveListeners() {
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const wishId = parseInt(btn.dataset.id);
+                queue = queue.filter(id => id !== wishId);
+                localStorage.setItem('grantQueue', JSON.stringify(queue));
+                showToast('Removed from queue', 'info');
+                loadWishDetails();
+            });
+        });
+    }
+
+    function attachInfoListeners() {
+        document.querySelectorAll('.wish-info').forEach(el => {
+            el.addEventListener('click', () => {
+                const wishId = el.dataset.id;
+                showWishModal(wishId);
+            });
+        });
+    }
+
+    // ---- Grant flow (modal + handlers) ----
+    async function confirmGrant(wishId) {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/wishes/${wishId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const wish = await res.json();
+            const costNgn = (wish.estimated_cost * 1500).toLocaleString();
+            pendingGrantWishId = wishId;
+            const modal = document.getElementById('grant-method-modal');
+            const titleEl = document.getElementById('grant-modal-title');
+            const costDisplay = document.getElementById('grant-cost-display');
+            const walletBtn = document.getElementById('grant-wallet-btn');
+            const paystackBtn = document.getElementById('grant-paystack-btn');
+            const manualBtn = document.getElementById('grant-manual-btn');
+            costDisplay.innerText = `₦${costNgn}`;
+            if (wish.wish_type === 'airtime' || wish.wish_type === 'data') {
+                titleEl.innerText = '💚 Grant this wish (Airtime/Data)';
+                walletBtn.style.display = 'block';
+                paystackBtn.style.display = 'block';
+                manualBtn.style.display = 'none';
+            } else {
+                titleEl.innerText = '💚 Grant this wish (Physical/Digital/Story)';
+                walletBtn.style.display = 'none';
+                paystackBtn.style.display = 'none';
+                manualBtn.style.display = 'block';
+            }
+            modal.style.display = 'flex';
+        } catch (err) {
+            showToast('Could not load wish details', 'error');
+        }
+    }
+
+    document.getElementById('grant-wallet-btn').onclick = async () => {
+        const modal = document.getElementById('grant-method-modal');
+        modal.style.display = 'none';
+        try {
+            const res = await fetch('http://127.0.0.1:8000/grants/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ wish_id: pendingGrantWishId, method: "wallet" })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            showToast('Wish granted! +10 karma', 'success');
+            queue = queue.filter(id => id !== pendingGrantWishId);
+            localStorage.setItem('grantQueue', JSON.stringify(queue));
+            loadWishDetails();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    document.getElementById('grant-paystack-btn').onclick = async () => {
+        const modal = document.getElementById('grant-method-modal');
+        modal.style.display = 'none';
+        try {
+            const res = await fetch('http://127.0.0.1:8000/grants/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ wish_id: pendingGrantWishId, method: "paystack" })
+            });
+            const data = await res.json();
+            if (data.authorization_url) {
+                showToast('Redirecting to payment...', 'info');
+                window.location.href = data.authorization_url;
+            } else {
+                showToast('Payment initialization failed', 'error');
+            }
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    document.getElementById('grant-manual-btn').onclick = async () => {
+        const modal = document.getElementById('grant-method-modal');
+        modal.style.display = 'none';
+        try {
+            const res = await fetch('http://127.0.0.1:8000/grants/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ wish_id: pendingGrantWishId, method: "manual" })
+            });
+            if (!res.ok) throw new Error(await res.text());
+            showToast('Wish granted! +10 karma', 'success');
+            queue = queue.filter(id => id !== pendingGrantWishId);
+            localStorage.setItem('grantQueue', JSON.stringify(queue));
+            loadWishDetails();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    document.getElementById('close-grant-modal').onclick = () => {
+        document.getElementById('grant-method-modal').style.display = 'none';
+    };
+
+    // ---- Paystack callback handler (for direct return from Paystack) ----
+    async function handleGrantCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const grantId = urlParams.get('grant_id');
+        const reference = urlParams.get('reference');
+        if (grantId && reference) {
+            // Clean the URL to avoid re‑processing on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+            showToast('Verifying payment...', 'info');
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/payments/verify-grant?grant_id=${grantId}&reference=${reference}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showToast('Wish granted! +10 karma', 'success');
+                    // Refresh the queue – the granted wish will disappear because its status is no longer 'active'
+                    loadWishDetails();
+                } else {
+                    showToast(data.message || 'Grant verification failed', 'error');
+                }
+            } catch (err) {
+                showToast('Verification error: ' + err.message, 'error');
+            }
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m]));
+    }
+
+    // Initialize
+    loadWishDetails();
+    handleGrantCallback();
+</script>
+</body>
+</html>

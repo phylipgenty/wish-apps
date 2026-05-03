@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Portal - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        body { background: #f0f0f5; }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .tab-btn.active {
+            border-bottom: 3px solid #8a2be2;
+            font-weight: bold;
+            color: #8a2be2;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active { display: block; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #8a2be2;
+        }
+
+        .wish-item {
+            border-bottom: 1px solid #eee;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wish-status {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .status-active { background: #d1fae5; color: #065f46; }
+        .status-granted { background: #dbeafe; color: #1e40af; }
+        .status-hidden { background: #fee2e2; color: #991b1b; }
+
+        button {
+            background: #8a2be2;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        form input, form textarea, form select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+
+<body>
+<div class="admin-container">
+
+    <h1>🛡️ Admin Portal</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="tab-btn" data-tab="flagged">Flagged Wishes</button>
+        <button class="tab-btn" data-tab="create">Create Wish (Seed)</button>
+        <button class="tab-btn" data-tab="all">All Wishes</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="tab-content active">
+        <div class="stats-grid" id="stats-grid">Loading...</div>
+    </div>
+
+    <!-- FLAGGED -->
+    <div id="flagged" class="tab-content">
+        <div id="flagged-list">Loading flagged wishes...</div>
+    </div>
+
+    <!-- CREATE WISH (SIMPLIFIED) -->
+    <div id="create" class="tab-content">
+        <h3>Seed a Wish (Simple)</h3>
+
+        <form id="admin-create-form">
+            <input type="text" id="admin-title" placeholder="Title" required>
+            <textarea id="admin-description" placeholder="Description" rows="2"></textarea>
+            <input type="number" id="admin-cost" placeholder="Cost (USD max 10)" step="0.01" max="10" required>
+            <select id="admin-category">
+                <option>Food</option>
+                <option>Books</option>
+                <option>Art Supplies</option>
+                <option>Small Gadgets</option>
+            </select>
+            <select id="admin-wish-type">
+                <option>Digital</option>
+                <option>Physical</option>
+                <option>Story</option>
+            </select>
+            <button type="submit">✨ Post Wish (Admin)</button>
+        </form>
+
+        <div id="create-result"></div>
+    </div>
+
+    <!-- ALL WISHES -->
+    <div id="all" class="tab-content">
+        <div id="all-wishes-list">Loading...</div>
+    </div>
+
+</div>
+
+<script type="module">
+import { getAuthToken } from '/scripts/api.js';
+import { showToast } from '/scripts/toast.js';
+
+const API = 'http://127.0.0.1:8000/admin';
+let token = getAuthToken();
+
+if (!token) window.location.href = '/login.html';
+
+/* =========================
+   🔐 ADMIN CHECK
+========================= */
+async function checkAdmin() {
+    try {
+        const res = await fetch('http://127.0.0.1:8000/admin/stats', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 403) {
+            showToast('Admin access required', 'error');
+            window.location.href = '/index.html';
+        }
+    } catch (e) {
+        window.location.href = '/index.html';
+    }
+}
+checkAdmin();
+
+/* =========================
+   API CALL
+========================= */
+async function apiCall(endpoint, options = {}) {
+    const res = await fetch(`${API}${endpoint}`, {
+        ...options,
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (res.status === 403) {
+        showToast('Admin access required', 'error');
+        window.location.href = '/index.html';
+        return null;
+    }
+
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+async function loadStats() {
+    const stats = await apiCall('/stats');
+    if (!stats) return;
+
+    document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card"><div class="stat-number">${stats.total_users}</div><div>Users</div></div>
+        <div class="stat-card"><div class="stat-number">${stats.total_wishes}</div><div>Wishes</div></div>
+        <div class="stat-card"><div class="stat-number">${stats.total_grants}</div><div>Granted</div></div>
+        <div class="stat-card"><div class="stat-number">${stats.total_flagged}</div><div>Flagged</div></div>
+    `;
+}
+
+/* =========================
+   FLAGGED
+========================= */
+async function loadFlagged() {
+    const container = document.getElementById('flagged-list');
+
+    const wishes = await apiCall('/wishes/flagged');
+    if (!wishes?.length) {
+        container.innerHTML = "<p>No flagged wishes.</p>";
+        return;
+    }
+
+    container.innerHTML = wishes.map(w => `
+        <div class="wish-item">
+            <div>
+                <strong>${escapeHtml(w.title)}</strong><br>
+                <small>Reports: ${w.report_count}</small>
+            </div>
+            <button onclick="window.hideWish(${w.id})">Hide</button>
+        </div>
+    `).join('');
+}
+
+window.hideWish = async (id) => {
+    await apiCall(`/wishes/${id}/hide`, { method: 'PUT' });
+    showToast("Wish hidden", "success");
+    loadFlagged();
+    loadStats();
+};
+
+/* =========================
+   CREATE WISH (FIXED)
+========================= */
+document.getElementById('admin-create-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const MAX_COST = 10.0;
+
+    const title = document.getElementById('admin-title').value;
+    const description = document.getElementById('admin-description').value;
+    const cost = parseFloat(document.getElementById('admin-cost').value);
+    const category = document.getElementById('admin-category').value;
+    const wishType = document.getElementById('admin-wish-type').value;
+
+    const wishData = {
+        title: title,
+        description: description,
+        estimated_cost: cost,
+        category_tag: category,
+        wish_type: wishType,
+        karma_required: 0,
+        is_anonymous: false,
+        proof_url: null,
+        occasion: null,
+        geo_location: null,
+        latitude: null,
+        longitude: null
+    };
+
+    if (wishData.estimated_cost > MAX_COST) {
+        showToast(`❌ Cost cannot exceed $${MAX_COST} USD`, 'error');
+        return;
+    }
+
+    try {
+        await apiCall('/wishes/create', {
+            method: 'POST',
+            body: JSON.stringify(wishData)
+        });
+        showToast('Wish created!', 'success');
+        e.target.reset();
+        loadStats();
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
+});
+
+/* =========================
+   ALL WISHES
+========================= */
+async function loadAllWishes() {
+    const container = document.getElementById('all-wishes-list');
+
+    const wishes = await apiCall('/wishes/all');
+    if (!wishes?.length) {
+        container.innerHTML = "<p>No wishes</p>";
+        return;
+    }
+
+    container.innerHTML = wishes.map(w => `
+        <div class="wish-item">
+            <div>
+                <strong>${escapeHtml(w.title)}</strong><br>
+                <span class="wish-status status-${w.status}">${w.status}</span>
+            </div>
+            <button onclick="window.deleteWish(${w.id})" style="background:red;">Delete</button>
+        </div>
+    `).join('');
+}
+
+window.deleteWish = async (id) => {
+    await apiCall(`/wishes/${id}`, { method: 'DELETE' });
+    showToast("Deleted", "success");
+    loadAllWishes();
+    loadStats();
+};
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+/* =========================
+   TABS
+========================= */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const tab = btn.dataset.tab;
+
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+
+        if (tab === 'dashboard') loadStats();
+        if (tab === 'flagged') loadFlagged();
+        if (tab === 'all') loadAllWishes();
+    });
+});
+
+/* INIT */
+loadStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        .profile-container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 16px;
+            border: 3px solid #8a2be2;
+        }
+        .karma-badge {
+            background: #8a2be2;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8a2be2;
+        }
+        .info-section {
+            text-align: left;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .info-row {
+            margin-bottom: 12px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .nav-links {
+            margin-top: 20px;
+        }
+        .nav-links a {
+            color: #8a2be2;
+            text-decoration: none;
+            margin: 0 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="profile-container" id="profile-container">
+    <img id="avatar" class="avatar" style="display: none;">
+    <h2 id="username"></h2>
+    <div>
+        <span class="karma-badge" id="karma">Karma: 0</span>
+        <span id="verified-badge" style="display:none; background:#4caf50; color:white; padding:2px 8px; border-radius:20px; margin-left:8px;">✓ Verified</span>
+    </div>
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="grants">0</div>
+            <div>Wishes Granted</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="joined"></div>
+            <div>Joined</div>
+        </div>
+    </div>
+    <div class="info-section">
+        <div class="info-row"><span class="info-label">Bio:</span> <span id="bio">—</span></div>
+        <div class="info-row"><span class="info-label">Location:</span> <span id="location">—</span></div>
+        <div class="info-row"><span class="info-label">Gender:</span> <span id="gender">—</span></div>
+        <div class="info-row"><span class="info-label">Date of Birth:</span> <span id="dob">—</span></div>
+    </div>
+    <div class="nav-links">
+        <a href="/index.html">← Back to Swipe</a>
+    </div>
+    <p id="error-msg" style="color:red; margin-top:20px;"></p>
+</div>
+<script type="module">
+    import { showToast } from '/scripts/toast.js';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('user_id');
+    if (!userId) {
+        document.getElementById('error-msg').innerText = 'No user specified.';
+        throw new Error('No user_id param'); // this will not break display
+    }
+
+    async function loadProfile() {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/users/public/${userId}`);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            const user = await res.json();
+            console.log('Public profile data:', user); // debug
+            document.getElementById('username').innerText = user.username || 'Unknown';
+            document.getElementById('karma').innerText = `Karma: ${user.karma_score ?? 0}`;
+            document.getElementById('grants').innerText = user.total_grants ?? 0;
+            if (user.joined) {
+                const date = new Date(user.joined);
+                document.getElementById('joined').innerText = date.toLocaleDateString();
+            } else {
+                document.getElementById('joined').innerText = 'Unknown';
+            }
+            if (user.is_verified) {
+                document.getElementById('verified-badge').style.display = 'inline-block';
+            }
+            if (user.avatar_url) {
+                const img = document.getElementById('avatar');
+                img.src = `http://127.0.0.1:8000${user.avatar_url}`;
+                img.style.display = 'block';
+            }
+            document.getElementById('bio').innerText = user.bio || '—';
+            document.getElementById('location').innerText = user.location || '—';
+            document.getElementById('gender').innerText = user.gender || '—';
+            if (user.date_of_birth) {
+                const dob = new Date(user.date_of_birth);
+                document.getElementById('dob').innerText = dob.toLocaleDateString();
+            } else {
+                document.getElementById('dob').innerText = '—';
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById('error-msg').innerText = err.message;
+            showToast(err.message, 'error');
+        }
+    }
+
+    loadProfile();
+</script>
+</body>
+</html>

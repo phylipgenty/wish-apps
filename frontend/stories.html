@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Success Stories - Wishbridge</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <style>
+        .stories-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .story-card {
+            background: white;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: 0.2s;
+        }
+        .story-image {
+            width: 100%;
+            border-radius: 20px;
+            max-height: 400px;
+            object-fit: cover;
+            margin-bottom: 16px;
+        }
+        .story-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .story-meta {
+            display: flex;
+            gap: 16px;
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+        .heart-btn {
+            background: none;
+            border: 1px solid #ff6b6b;
+            border-radius: 40px;
+            padding: 6px 16px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: #ff6b6b;
+            transition: 0.2s;
+        }
+        .heart-btn:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+        .heart-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .nav-links {
+            text-align: center;
+            margin: 20px;
+        }
+        .nav-links a {
+            margin: 0 12px;
+            color: #8a2be2;
+            text-decoration: none;
+        }
+        h1 {
+            text-align: center;
+        }
+        .sub {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-links">
+    <a href="/index.html">Swipe</a>
+    <a href="/post.html">Post Wish</a>
+    <a href="/profile.html">Profile</a>
+    <a href="/dashboard.html">Queue</a>
+    <a href="/map.html">🗺️ Map</a>
+</div>
+
+<div class="stories-container">
+    <h1>💚 Success Stories</h1>
+    <div class="sub">Real wishes, real kindness</div>
+    <div id="stories-list">Loading...</div>
+</div>
+
+<script type="module">
+    import { showToast } from '/scripts/toast.js';
+    import { getAuthToken } from '/scripts/api.js';
+
+    async function loadStories() {
+        try {
+            const res = await fetch('http://127.0.0.1:8000/wishes/stories/latest');
+            if (!res.ok) throw new Error('Failed to load stories');
+
+            const stories = await res.json();
+            const container = document.getElementById('stories-list');
+
+            if (stories.length === 0) {
+                container.innerHTML = '<div class="empty">✨ No success stories yet. Be the first to grant a wish!</div>';
+                return;
+            }
+
+            container.innerHTML = stories.map(story => `
+                <div class="story-card" data-id="${story.id}">
+                    ${story.proof_url ? `<img class="story-image" src="http://127.0.0.1:8000${story.proof_url}" alt="Proof">` : ''}
+
+                    <div class="story-title">${escapeHtml(story.title)}</div>
+
+                    <div class="story-meta">
+                        <span>💰 $${story.estimated_cost}</span>
+                        <span>🏷 ${story.category_tag}</span>
+                        <span>❤️ <span class="heart-count">${story.heart_count || 0}</span></span>
+                    </div>
+
+                    <button class="heart-btn">❤️ Thank</button>
+                </div>
+            `).join('');
+
+            // Attach thank listeners
+            document.querySelectorAll('.story-card').forEach(card => {
+                const btn = card.querySelector('.heart-btn');
+                const storyId = parseInt(card.dataset.id);
+                const heartSpan = card.querySelector('.heart-count');
+
+                btn.addEventListener('click', async () => {
+
+                    // ✅ NEW LOGIN CHECK FLOW
+                    const token = getAuthToken();
+
+                    if (!token) {
+                        showToast('Please login to thank stories 💚', 'warning');
+                        setTimeout(() => {
+                            window.location.href = '/login.html';
+                        }, 1500);
+                        return;
+                    }
+
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+
+                    try {
+                        const res = await fetch(`http://127.0.0.1:8000/thanks/${storyId}`, {
+                            method: 'POST',
+                            headers: { 
+                                'Authorization': `Bearer ${token}` 
+                            }
+                        });
+
+                        if (res.status === 401) {
+                            showToast('Session expired. Please login again.', 'error');
+                            localStorage.removeItem('wishbridge_token');
+
+                            setTimeout(() => {
+                                window.location.href = '/login.html';
+                            }, 1500);
+                            return;
+                        }
+
+                        if (!res.ok) {
+                            const err = await res.json();
+                            throw new Error(err.detail || 'Failed to thank story');
+                        }
+
+                        const data = await res.json();
+                        heartSpan.textContent = data.thank_count;
+
+                        showToast('Thank you! ❤️', 'success');
+
+                    } catch (err) {
+                        showToast(err.message, 'error');
+                        btn.disabled = false;
+                        btn.classList.remove('disabled');
+                    }
+                });
+            });
+
+        } catch (err) {
+            showToast('Failed to load stories', 'error');
+        }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, (m) => {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    loadStories();
+</script>
+
+</body>
+</html>
