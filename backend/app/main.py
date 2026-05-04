@@ -66,7 +66,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://wish-apps.onrender.com",  # Your frontend domain (change if different)
+        "https://wish-apps-3syp.vercel.app",   # your actual Vercel domain
+          # Add any other frontend domains (e.g., custom domain)
     ],
     allow_credentials=True,
     allow_methods=["*"],
