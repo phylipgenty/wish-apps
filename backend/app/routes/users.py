@@ -419,3 +419,12 @@ async def reset_password(
     db.commit()
 
     return {"message": "Password reset successful. You can now log in."}
+
+    # =========================
+# 👑 MAKE CURRENT USER ADMIN (ONE‑TIME USE)
+# =========================
+@router.post("/make-me-admin")
+def make_me_admin(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    current_user.is_admin = True
+    db.commit()
+    return {"message": f"User {current_user.username} is now an admin"}
