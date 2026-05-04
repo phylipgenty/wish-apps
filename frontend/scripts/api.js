@@ -1,4 +1,4 @@
-const API_BASE = 'https://wish-apps.onrender.com/';  // not localhost? Use 127.0.0.1
+const API_BASE = 'https://wish-apps.onrender.com';  // not localhost? Use 127.0.0.1
 
 let authToken = null;
 
