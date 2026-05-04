@@ -73,7 +73,7 @@
     const reference = urlParams.get('reference');
     if (reference) {
         const token = localStorage.getItem('wishbridge_token');
-        fetch(`http://127.0.0.1:8000/payments/verify?reference=${reference}`, {
+        fetch(`https://wish-apps.onrender.com/payments/verify?reference=${reference}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         })

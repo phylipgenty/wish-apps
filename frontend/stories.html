@@ -101,7 +101,7 @@
 
     async function loadStories() {
         try {
-            const res = await fetch('http://127.0.0.1:8000/wishes/stories/latest');
+            const res = await fetch('https://wish-apps.onrender.com/wishes/stories/latest');
             if (!res.ok) throw new Error('Failed to load stories');
 
             const stories = await res.json();
@@ -114,7 +114,7 @@
 
             container.innerHTML = stories.map(story => `
                 <div class="story-card" data-id="${story.id}">
-                    ${story.proof_url ? `<img class="story-image" src="http://127.0.0.1:8000${story.proof_url}" alt="Proof">` : ''}
+                    ${story.proof_url ? `<img class="story-image" src="https://wish-apps.onrender.com${story.proof_url}" alt="Proof">` : ''}
 
                     <div class="story-title">${escapeHtml(story.title)}</div>
 
@@ -151,7 +151,7 @@
                     btn.classList.add('disabled');
 
                     try {
-                        const res = await fetch(`http://127.0.0.1:8000/thanks/${storyId}`, {
+                        const res = await fetch(`https://wish-apps.onrender.com/thanks/${storyId}`, {
                             method: 'POST',
                             headers: { 
                                 'Authorization': `Bearer ${token}` 

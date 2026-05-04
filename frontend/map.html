@@ -56,7 +56,7 @@
 
     async function loadMapPoints() {
         try {
-            const res = await fetch('http://127.0.0.1:8000/wishes/map/kindness');
+            const res = await fetch('https://wish-apps.onrender.com/wishes/map/kindness');
             if (!res.ok) throw new Error('Failed to load map data');
             const points = await res.json();
             
@@ -84,7 +84,7 @@
                 marker.bindPopup(`
                     <strong>${escapeHtml(point.title)}</strong><br>
                     ${escapeHtml(point.description.substring(0, 80))}...<br>
-                    <img src="http://127.0.0.1:8000${point.proof_url}" style="max-width: 150px; border-radius: 8px; margin-top: 8px;">
+                    <img src="https://wish-apps.onrender.com${point.proof_url}" style="max-width: 150px; border-radius: 8px; margin-top: 8px;">
                 `);
             });
             

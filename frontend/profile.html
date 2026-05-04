@@ -359,7 +359,7 @@ if (bell && countSpan && dropdown) initNotificationBell(bell, countSpan, dropdow
 // =========================
 async function fetchWalletBalance() {
     try {
-        const res = await fetch('http://127.0.0.1:8000/wallet/balance', {
+        const res = await fetch('https://wish-apps.onrender.com/wallet/balance', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -392,7 +392,7 @@ async function loadProfile() {
 
         if (user.avatar_url) {
             const img = document.getElementById('avatar-img');
-            img.src = `http://127.0.0.1:8000${user.avatar_url}`;
+            img.src = `https://wish-apps.onrender.com${user.avatar_url}`;
             img.style.display = 'block';
         }
 
@@ -417,7 +417,7 @@ async function loadProfile() {
 // =========================
 document.getElementById('resend-verify-btn')?.addEventListener('click', async () => {
     try {
-        const res = await fetch('http://127.0.0.1:8000/users/resend-verification', {
+        const res = await fetch('https://wish-apps.onrender.com/users/resend-verification', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -486,7 +486,7 @@ confirmBtn.addEventListener('click', async () => {
         confirmBtn.disabled = true;
         confirmBtn.innerText = "Processing...";
 
-        const res = await fetch('http://127.0.0.1:8000/payments/initialize', {
+        const res = await fetch('https://wish-apps.onrender.com/payments/initialize', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

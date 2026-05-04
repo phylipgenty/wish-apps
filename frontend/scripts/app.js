@@ -34,7 +34,7 @@ async function loadNextCard() {
 
 function displayCard(wish) {
     const stack = document.querySelector('.card-stack');
-    const imageUrl = wish.proof_url ? `http://127.0.0.1:8000${wish.proof_url}` : null;
+    const imageUrl = wish.proof_url ? `https://wish-apps.onrender.com${wish.proof_url}` : null;
     const imageHtml = imageUrl ? `<div class="card-image"><img src="${imageUrl}" alt="Proof"></div>` : '';
     const costNgn = (wish.estimated_cost * 1500).toLocaleString();  // <-- FIX: compute ngnCost here
     const posterHtml = wish.is_anonymous ? 'Anonymous' : `<a href="/public-profile.html?user_id=${wish.user_id}" style="color:#8a2be2; text-decoration:none;">${escapeHtml(wish.username)}</a>`;

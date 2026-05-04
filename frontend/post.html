@@ -279,7 +279,7 @@ fileInput.onchange = async () => {
     const formData = new FormData();
     formData.append('file', file);
     try {
-        const res = await fetch('http://127.0.0.1:8000/wishes/upload-proof', {
+        const res = await fetch('https://wish-apps.onrender.com/wishes/upload-proof', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${getAuthToken()}` },
             body: formData
@@ -287,7 +287,7 @@ fileInput.onchange = async () => {
         if (!res.ok) throw new Error('Upload failed');
         const data = await res.json();
         proofUrlInput.value = data.proof_url;
-        preview.src = `http://127.0.0.1:8000${data.proof_url}`;
+        preview.src = `https://wish-apps.onrender.com${data.proof_url}`;
         preview.style.display = 'block';
         showToast('Image uploaded ✔', 'success');
     } catch (err) {

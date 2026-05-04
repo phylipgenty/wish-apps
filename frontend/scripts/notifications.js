@@ -6,7 +6,7 @@ export async function fetchUnreadCount() {
     const token = getAuthToken();
     if (!token) return 0;
     try {
-        const res = await fetch('http://127.0.0.1:8000/users/notifications', {
+        const res = await fetch('https://wish-apps.onrender.com/users/notifications', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error();
@@ -22,7 +22,7 @@ export async function loadNotifications() {
     const token = getAuthToken();
     if (!token) return [];
     try {
-        const res = await fetch('http://127.0.0.1:8000/users/notifications', {
+        const res = await fetch('https://wish-apps.onrender.com/users/notifications', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error();
@@ -37,7 +37,7 @@ export async function markAsRead(notifId) {
     const token = getAuthToken();
     if (!token) return;
     try {
-        await fetch(`http://127.0.0.1:8000/users/notifications/${notifId}/read`, {
+        await fetch(`https://wish-apps.onrender.com/users/notifications/${notifId}/read`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
         });

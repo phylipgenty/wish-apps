@@ -101,7 +101,7 @@
             }
             if (currentUser.avatar_url) {
                 const avatarImg = document.getElementById('avatar-preview');
-                avatarImg.src = `http://127.0.0.1:8000${currentUser.avatar_url}`;
+                avatarImg.src = `https://wish-apps.onrender.com${currentUser.avatar_url}`;
                 avatarImg.style.display = 'block';
             }
         } catch (err) {
@@ -116,7 +116,7 @@
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const res = await fetch('http://127.0.0.1:8000/users/upload-avatar', {
+            const res = await fetch('https://wish-apps.onrender.com/users/upload-avatar', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${getAuthToken()}` },
                 body: formData
@@ -124,7 +124,7 @@
             const data = await res.json();
             showToast('Avatar updated', 'success');
             const avatarImg = document.getElementById('avatar-preview');
-            avatarImg.src = `http://127.0.0.1:8000${data.avatar_url}`;
+            avatarImg.src = `https://wish-apps.onrender.com${data.avatar_url}`;
             avatarImg.style.display = 'block';
         } catch (err) {
             showToast('Upload failed', 'error');
@@ -155,7 +155,7 @@
             return;
         }
         try {
-            const res = await fetch('http://127.0.0.1:8000/users/me', {
+            const res = await fetch('https://wish-apps.onrender.com/users/me', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
                 body: JSON.stringify(updateData)

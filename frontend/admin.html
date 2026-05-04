@@ -159,7 +159,7 @@
 import { getAuthToken } from '/scripts/api.js';
 import { showToast } from '/scripts/toast.js';
 
-const API = 'http://127.0.0.1:8000/admin';
+const API = 'https://wish-apps.onrender.com/admin';
 let token = getAuthToken();
 
 if (!token) window.location.href = '/login.html';
@@ -169,7 +169,7 @@ if (!token) window.location.href = '/login.html';
 ========================= */
 async function checkAdmin() {
     try {
-        const res = await fetch('http://127.0.0.1:8000/admin/stats', {
+        const res = await fetch('https://wish-apps.onrender.com/admin/stats', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 

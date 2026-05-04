@@ -339,7 +339,7 @@
 
     async function showWishModal(wishId) {
         try {
-            const res = await fetch(`http://127.0.0.1:8000/wishes/${wishId}`, {
+            const res = await fetch(`https://wish-apps.onrender.com/wishes/${wishId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const wish = await res.json();
@@ -351,7 +351,7 @@
             document.getElementById('modal-status').innerHTML = `📌 Status: ${wish.status}`;
             const modalImg = document.getElementById('modal-image');
             if (wish.proof_url) {
-                modalImg.src = `http://127.0.0.1:8000${wish.proof_url}`;
+                modalImg.src = `https://wish-apps.onrender.com/${wish.proof_url}`;
                 modalImg.style.display = 'block';
             } else {
                 modalImg.style.display = 'none';
@@ -372,7 +372,7 @@
         container.innerHTML = '';
         let dirty = false;
         for (let wishId of queue) {
-            const res = await fetch(`http://127.0.0.1:8000/wishes/${wishId}`, {
+            const res = await fetch(`https://wish-apps.onrender.com/wishes/${wishId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) {
@@ -493,7 +493,7 @@
     // ---- Grant flow (modal + handlers) ----
     async function confirmGrant(wishId) {
         try {
-            const res = await fetch(`http://127.0.0.1:8000/wishes/${wishId}`, {
+            const res = await fetch(`https://wish-apps.onrender.com/wishes/${wishId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const wish = await res.json();
@@ -527,7 +527,7 @@
         const modal = document.getElementById('grant-method-modal');
         modal.style.display = 'none';
         try {
-            const res = await fetch('http://127.0.0.1:8000/grants/', {
+            const res = await fetch('https://wish-apps.onrender.com/grants/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ wish_id: pendingGrantWishId, method: "wallet" })
@@ -546,7 +546,7 @@
         const modal = document.getElementById('grant-method-modal');
         modal.style.display = 'none';
         try {
-            const res = await fetch('http://127.0.0.1:8000/grants/', {
+            const res = await fetch('https://wish-apps.onrender.com/grants/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ wish_id: pendingGrantWishId, method: "paystack" })
@@ -567,7 +567,7 @@
         const modal = document.getElementById('grant-method-modal');
         modal.style.display = 'none';
         try {
-            const res = await fetch('http://127.0.0.1:8000/grants/', {
+            const res = await fetch('https://wish-apps.onrender.com/grants/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ wish_id: pendingGrantWishId, method: "manual" })
@@ -596,7 +596,7 @@
             window.history.replaceState({}, document.title, window.location.pathname);
             showToast('Verifying payment...', 'info');
             try {
-                const res = await fetch(`http://127.0.0.1:8000/payments/verify-grant?grant_id=${grantId}&reference=${reference}`, {
+                const res = await fetch(`https://wish-apps.onrender.com/payments/verify-grant?grant_id=${grantId}&reference=${reference}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
