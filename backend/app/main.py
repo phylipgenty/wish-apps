@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import os  # added
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -8,14 +9,14 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from .database import engine
-from . import models  # must import models
+from . import models
 
 # =========================
 # 🚦 RATE LIMITER SETUP
 # =========================
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["60/minute"]  # per IP
+    default_limits=["60/minute"]
 )
 
 app = FastAPI(title="Wishbridge API")
@@ -33,9 +34,14 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 
 # =========================
-# 📁 STATIC FILES
+# 📁 STATIC FILES (create uploads dir if missing)
 # =========================
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+    print(f"Created directory: {UPLOAD_DIR}")
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 # =========================
@@ -60,7 +66,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://yourfrontend.vercel.app"  # CHANGE THIS IN PROD
+        "https://wish-apps.onrender.com",  # Your frontend domain (change if different)
     ],
     allow_credentials=True,
     allow_methods=["*"],
